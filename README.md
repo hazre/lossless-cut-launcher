@@ -12,8 +12,8 @@ Download and run [`LosslessCutLauncher-win-x64-Setup.exe`](https://github.com/ha
 
 ### Portable
 
-- **Windows**: Download the `LosslessCutLauncher-win-x64-portable.zip` file, unzip it, and run `current/LosslessCutLauncher.exe`.
-- **Linux**: Download the `LosslessCutLauncher-linux-x64.AppImage` file, make it executable (`chmod +x *.AppImage`), and then run it.
+- **Windows**: Download the [`LosslessCutLauncher-win-x64-portable.zip`](https://github.com/hazre/lossless-cut-launcher/releases/latest/download/LosslessCutLauncher-win-x64-portable.zip) file, unzip it, and run `current/LosslessCutLauncher.exe`.
+- **Linux**: Download the [`LosslessCutLauncher-linux-x64.AppImage`](https://github.com/hazre/lossless-cut-launcher/releases/latest/download/LosslessCutLauncher-linux-x64.AppImage) file, make it executable (`chmod +x *.AppImage`), and then run it.
 
 ## Building from Source
 
