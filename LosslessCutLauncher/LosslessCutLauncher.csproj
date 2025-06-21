@@ -6,8 +6,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Title>Lossless Cut Launcher</Title>
+    <AssemblyTitle>Lossless Cut Launcher</AssemblyTitle>
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <RollForward>LatestMajor</RollForward>
+    <Authors>hazre</Authors>
+    <RepositoryUrl>https://github.com/hazre/lossless-cut-launcher</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Copyright>Copyright (c) 2025 hazre (github.com/hazre)</Copyright>
+    <Description>A simple launcher for LosslessCut that automatically keeps it up-to-date.</Description>
+    <Company>hazre.dev</Company>
   </PropertyGroup>
 
   <ItemGroup>
