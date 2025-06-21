@@ -8,12 +8,12 @@ Download the latest release from the project's GitHub Releases page.
 
 ### Installer (Windows)
 
-Download and run `Setup.exe` to install the application.
+Download and run [`LosslessCutLauncher-win-x64-Setup.exe`](https://github.com/hazre/lossless-cut-launcher/releases/latest/download/LosslessCutLauncher-win-x64-Setup.exe) to install the application.
 
 ### Portable
 
-- **Windows**: Download the `.zip` file, unzip it, and run `LosslessCutLauncher.exe`.
-- **Linux**: Download the `.AppImage` file, make it executable (`chmod +x *.AppImage`), and then run it.
+- **Windows**: Download the `LosslessCutLauncher-win-x64-portable.zip` file, unzip it, and run `current/LosslessCutLauncher.exe`.
+- **Linux**: Download the `LosslessCutLauncher-linux-x64.AppImage` file, make it executable (`chmod +x *.AppImage`), and then run it.
 
 ## Building from Source
 
