@@ -3,6 +3,14 @@ versioned_files = [
     { path = "LosslessCutLauncher/LosslessCutLauncher.csproj", regex = '<AssemblyVersion>(?<version>\d+\.\d+\.\d+)</AssemblyVersion>' },
 ]
 changelog = "CHANGELOG.md"
+extra_changelog_sections = [
+    { name = "Documentation", types = [
+        "docs",
+    ] },
+    { name = "Notes", types = [
+        "note",
+    ] },
+]
 assets = "release-assets/*"
 
 [changes]
