@@ -20,42 +20,47 @@ public class UpdateChecker : IUpdateCheckService
     _logger = logger;
   }
 
-  public async Task<Version?> GetLatestVersionAsync(CancellationToken cancellationToken)
+  public async Task<IReadOnlyList<Version>> GetVersionCandidatesAsync(CancellationToken cancellationToken)
   {
     _logger.LogInformation("Checking for updates...");
 
     try
     {
-      var httpClient = _httpClientFactory.CreateClient();
+      using var httpClient = _httpClientFactory.CreateClient();
       var response = await httpClient.GetStringAsync(_launcherSettings.Value.UpdateFeedUrl, cancellationToken);
 
       var doc = XDocument.Parse(response);
       var ns = "http://www.w3.org/2005/Atom";
-      var versions = doc.Root?.Elements(XName.Get("entry", ns))
+      var candidates = doc.Root?.Elements(XName.Get("entry", ns))
           .Select(entry => entry.Element(XName.Get("title", ns))?.Value)
-          .Where(title => title != null)
+          .Where(title => !string.IsNullOrWhiteSpace(title))
           .Select(title => Version.TryParse(title!.TrimStart('v'), out var version) ? version : null)
-          .Where(version => version != null)
+          .Where(version => version is not null)
+          .Cast<Version>()
+          .Distinct()
           .OrderByDescending(v => v)
-          .ToList() ?? new List<Version?>();
+          .ToList() ?? new List<Version>();
 
-      var latestVersion = versions.FirstOrDefault();
-
-      if (latestVersion != null)
+      if (candidates.Count > 0)
       {
-        _logger.LogInformation("Latest version found: {Version}", latestVersion);
+        _logger.LogInformation("Found {Count} version candidates from update feed.", candidates.Count);
       }
       else
       {
-        _logger.LogWarning("Could not determine latest version from feed.");
+        _logger.LogWarning("No valid version candidates found in feed.");
       }
 
-      return latestVersion;
+      return candidates;
+    }
+    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+    {
+      _logger.LogInformation("Update check cancelled.");
+      throw;
     }
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error checking for updates");
-      return null;
+      return Array.Empty<Version>();
     }
   }
 }

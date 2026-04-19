@@ -32,38 +32,49 @@ namespace LosslessCutLauncher.Services
     public async Task StartAsync(CancellationToken cancellationToken)
     {
       _logger.LogInformation("Orchestrator service started.");
+      var shouldLaunch = true;
 
       try
       {
-        var latestVersion = await _updateCheckService.GetLatestVersionAsync(cancellationToken);
+        var candidates = await _updateCheckService.GetVersionCandidatesAsync(cancellationToken);
         var localVersion = GetLocalVersion();
 
-        if (latestVersion == null)
+        IReadOnlyList<Version> newerCandidates = localVersion == null
+            ? candidates
+            : candidates.Where(v => v > localVersion).ToList();
+
+        if (newerCandidates.Count > 0)
         {
-          _logger.LogWarning("Could not determine latest version. Launching currently installed version if available.");
-          if (localVersion != null)
+          _logger.LogInformation("Found {Count} candidate version(s) to try for update.", newerCandidates.Count);
+          var installedVersion = await _updateService.DownloadAndExtractBestAvailableAsync(newerCandidates, cancellationToken);
+
+          if (installedVersion != null)
           {
-            _applicationLauncher.Launch(new string[] { });
+            _logger.LogInformation("Installed LosslessCut v{Version}", installedVersion);
           }
           else
           {
-            _logger.LogError("No local version found and could not fetch latest version. Application cannot start.");
+            _logger.LogWarning("Could not download any candidate release. Launching local executable if available.");
+            Console.WriteLine("Could not download any LosslessCut release from available tags. Launching local executable if available.");
           }
         }
         else
         {
-          if (localVersion == null || latestVersion > localVersion)
+          if (candidates.Count == 0)
           {
-            _logger.LogInformation("New version available. Downloading and updating...");
-            await _updateService.DownloadAndExtractUpdateAsync(latestVersion, cancellationToken);
-            _applicationLauncher.Launch(new string[] { });
+            _logger.LogWarning("No downloadable version candidates found. Launching local executable if available.");
+            Console.WriteLine("No downloadable LosslessCut releases found in tags feed. Launching local executable if available.");
           }
           else
           {
-            _logger.LogInformation("Application is up to date. Launching...");
-            _applicationLauncher.Launch(new string[] { });
+            _logger.LogInformation("Application is already up to date. Launching local executable.");
           }
         }
+      }
+      catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+      {
+        shouldLaunch = false;
+        _logger.LogInformation("Orchestrator startup was cancelled.");
       }
       catch (Exception ex)
       {
@@ -71,6 +82,11 @@ namespace LosslessCutLauncher.Services
       }
       finally
       {
+        if (shouldLaunch)
+        {
+          _applicationLauncher.Launch(Array.Empty<string>());
+        }
+
         _hostApplicationLifetime.StopApplication();
       }
     }

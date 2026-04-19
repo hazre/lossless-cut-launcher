@@ -13,10 +13,10 @@ public interface IPlatformService
 
 public interface IUpdateCheckService
 {
-  Task<Version?> GetLatestVersionAsync(CancellationToken cancellationToken);
+  Task<IReadOnlyList<Version>> GetVersionCandidatesAsync(CancellationToken cancellationToken);
 }
 
 public interface IUpdateService
 {
-  Task DownloadAndExtractUpdateAsync(Version version, CancellationToken cancellationToken);
+  Task<Version?> DownloadAndExtractBestAvailableAsync(IReadOnlyList<Version> candidates, CancellationToken cancellationToken);
 }
