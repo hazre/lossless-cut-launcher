@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Title>Lossless Cut Launcher</Title>
@@ -12,16 +12,16 @@
     <Authors>hazre</Authors>
     <RepositoryUrl>https://github.com/hazre/lossless-cut-launcher</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Copyright>Copyright (c) 2025 hazre (github.com/hazre)</Copyright>
+    <Copyright>Copyright (c) 2026 hazre (github.com/hazre)</Copyright>
     <Description>A simple launcher for LosslessCut that automatically keeps it up-to-date.</Description>
     <Company>hazre.dev</Company>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
-    <PackageReference Include="SharpCompress" Version="0.40.0" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.6" />
-    <PackageReference Include="Velopack" Version="0.0.1298" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.6" />
+    <PackageReference Include="SharpCompress" Version="0.47.4" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.6" />
+    <PackageReference Include="Velopack" Version="$(VelopackVersion)" />
   </ItemGroup>
 
   <ItemGroup>
