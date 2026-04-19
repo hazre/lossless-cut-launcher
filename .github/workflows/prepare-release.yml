@@ -72,6 +72,7 @@ jobs:
 
             async function resolveCommit(hash) {
               const shortHash = hash.slice(0, 7);
+              const commitUrl = `${process.env.GITHUB_SERVER_URL ?? "https://github.com"}/${owner}/${repo}/commit/${hash}`;
               try {
                 const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
                   owner,
@@ -80,11 +81,11 @@ jobs:
                 });
                 const pr = prs.data[0];
                 if (!pr) {
-                  return `\`${shortHash}\``;
+                  return `([${shortHash}](${commitUrl}))`;
                 }
                 return `([#${pr.number}](${pr.html_url}) by @${pr.user.login})`;
               } catch {
-                return `\`${shortHash}\``;
+                return `([${shortHash}](${commitUrl}))`;
               }
             }
 
