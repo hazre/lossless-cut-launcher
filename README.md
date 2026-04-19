@@ -18,5 +18,11 @@ Download and run [`LosslessCutLauncher-win-x64-Setup.exe`](https://github.com/ha
 ## Building from Source
 
 1.  Clone the repository.
-2.  Install the .NET 9 SDK.
+2.  Install the .NET 10 SDK, or let `global.json` pin `10.0.202` for you.
 3.  Run `dotnet build` from the project's root directory.
+
+## Releases
+
+Create a change file with `knope document-change`.
+Knope uses `knope.toml` to open a release PR from `prepare-release`.
+Merging that release PR publishes the release and uploads any assets from `release-assets/*`.

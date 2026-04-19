@@ -1,0 +1,139 @@
+name: Create Release PR
+
+on:
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  prepare-release:
+    if: "!contains(github.event.head_commit.message, 'chore: prepare release')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Install Knope
+        uses: knope-dev/action@19617851f9f13ab2f27a05989c55efb18aca3675 # v2.1.2
+        with:
+          version: 0.22.3
+
+      - name: Prepare Release
+        id: prepare-release
+        shell: bash
+        run: |
+          log_file="$(mktemp)"
+          set +e
+          knope prepare-release --verbose >"$log_file" 2>&1
+          status=$?
+          set -e
+          cat "$log_file"
+
+          if [ "$status" -eq 0 ]; then
+            echo "release_created=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if grep -qE 'No packages are ready to release|releases::no_release' "$log_file"; then
+            echo "release_created=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          exit "$status"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enrich changelog and release PR
+        if: steps.prepare-release.outputs.release_created == 'true'
+        id: enrich
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require("fs");
+            const { owner, repo } = context.repo;
+            const changelogPath = "CHANGELOG.md";
+            const marker = /<!-- commit:([0-9a-f]+) -->/g;
+            let changelogChanged = false;
+
+            async function resolveCommit(hash) {
+              const shortHash = hash.slice(0, 7);
+              try {
+                const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                  owner,
+                  repo,
+                  commit_sha: hash,
+                });
+                const pr = prs.data[0];
+                if (!pr) {
+                  return `\`${shortHash}\``;
+                }
+                return `([#${pr.number}](${pr.html_url}) by @${pr.user.login})`;
+              } catch {
+                return `\`${shortHash}\``;
+              }
+            }
+
+            async function enrich(text) {
+              const hashes = [...new Set([...text.matchAll(marker)].map((match) => match[1]))];
+              for (const hash of hashes) {
+                text = text.replaceAll(`<!-- commit:${hash} -->`, await resolveCommit(hash));
+              }
+              return text;
+            }
+
+            if (fs.existsSync(changelogPath)) {
+              const current = fs.readFileSync(changelogPath, "utf8");
+              const enriched = await enrich(current);
+              if (enriched !== current) {
+                fs.writeFileSync(changelogPath, enriched);
+                changelogChanged = true;
+              }
+            }
+
+            const prs = await github.rest.pulls.list({
+              owner,
+              repo,
+              head: `${owner}:release`,
+              state: "open",
+            });
+            const pr = prs.data[0];
+            if (!pr) {
+              core.warning("No open release PR found.");
+              core.setOutput("changelog_changed", String(changelogChanged));
+              return;
+            }
+
+            const updatedBody = await enrich(pr.body ?? "");
+            if (updatedBody !== (pr.body ?? "")) {
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: pr.number,
+                body: updatedBody,
+              });
+            }
+
+            core.setOutput("changelog_changed", String(changelogChanged));
+
+      - name: Amend release commit with enriched changelog
+        if: steps.enrich.outputs.changelog_changed == 'true'
+        shell: bash
+        run: |
+          git add CHANGELOG.md
+          git commit --amend --no-edit
+          git push --force --set-upstream origin release
